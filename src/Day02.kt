@@ -41,59 +41,67 @@ private fun checkPart1() {
 
 private fun checkPart2() {
     check(part2(readInputResources(DAY_NAME, "test")).println("Part two test result") == 4L)
-    check(part2(readInputResources(DAY_NAME, "input")).println("Part two test result") > 351L)
+    check(part2(readInputResources(DAY_NAME, "test_mp")).println("Part two test_mp result") == 2L)
+    val result2 = part2(readInputResources(DAY_NAME, "input")).println("Part two test result")
+    check( result2 > 351L)
+    check( result2 < 412L)
 }
 
-private fun part2(input: List<String>): Long = parse(input).map {
-    it.zipWithNext { prev, next ->
-        next - prev
-    }
-}.filterIndexed { index, it ->
-    println("Processing => ${it} ${index}")
-    val (increasing, decreasing, levelDiffs) = calculateSafetyStatiscits(it)
-    val stable = it.count { it == 0L }
-    val xx = setOf(1, 2)
-    if ((levelDiffs != it.size && (levelDiffs >= it.size - 2)) || (xx.contains(increasing) || xx.contains(decreasing) || stable ==1)) {
-        val index: Int
-        val broken: Long?
-        if(stable ==1){
-            println("stable breach")
-            broken = it.find { it == 0L }
-            index = it.indexOf(broken)
-        } else if (xx.contains(decreasing)) {
-            println("decreasing breach")
-            broken = it.find { it < 0 }
-            index = it.indexOf(broken)
-
-        } else if (xx.contains(increasing)) {
-            println("increasing breach")
-            broken = it.find { it > 0 }
-            index = it.indexOf(broken)
-
-        } else {
-            println("Thhreshold breach")
-            broken = it.find { !setOf(1, 2, 3L).contains(it) }
-            index = it.indexOf(broken)
-        }
-        println("index broken ${index} broken ${broken}")
-        val fixedReport = it.toMutableList()
-        if (index < it.size - 1) {
-            println("Here")
-            fixedReport[index] = fixedReport[index + 1] + fixedReport[index]
-            fixedReport.removeAt(index + 1)
-        } else {
-            fixedReport.removeAt(index)
-        }
-        fixedReport.println("Fixed report")
-
-        val (increasing, decreasing, levelDiffs) = calculateSafetyStatiscits(fixedReport)
-        isSafety(levelDiffs, fixedReport, increasing, decreasing)
-
-
-    } else isSafety(levelDiffs, it, increasing, decreasing)
-
-
+private fun part2(input: List<String>): Long = parse(input).filter {
+    checkList(it).println("Results for list ${it}")
 }.size.toLong()
+
+private fun checkList(list: List<Long>, increasing: Boolean? = null, thresholdProblem: Int = 1, iteration : Int = 0): Boolean {
+    println("[checkList][$iteration] increasing=$increasing thresholdProblem=$thresholdProblem list=$list")
+    if (list.size < 2)
+        return true
+    if (list.size == 2) {
+        val first = list[0]
+        val second = list[1]
+        val distance = second - first
+
+        return if (increasing == null || thresholdProblem != 0) true else (if (increasing) distance > 0 else distance < 0)
+    }
+    val first = list[0]
+    val second = list[1]
+    val third = list[2]
+    val distanceOneTwo = second - first
+    val distanceTwoThree = third - second
+
+    var newIcreasing = calculateIncreasing(increasing, distanceOneTwo)
+
+    if(iteration == 0 &&!setOf(1, 2, 3L).contains(abs(distanceOneTwo))){
+        return checkList(
+            listOf(first) + list.drop(2),
+            increasing,
+            thresholdProblem - 1,
+            iteration=iteration+1
+        ) || checkList(listOf(second) + list.drop(2), increasing, thresholdProblem - 1,iteration=iteration+1)
+    } else if (  !setOf(1, 2, 3L).contains(abs(distanceTwoThree))) {
+        if (thresholdProblem != 0)
+            return checkList(
+                listOf(first,second) + list.drop(3),
+                increasing,
+                thresholdProblem - 1,
+                iteration=iteration+1
+            ) || checkList(listOf(first) + list.drop(2), increasing, thresholdProblem - 1,iteration=iteration+1)
+        else return false
+    } else
+        return checkList(list.drop(1), newIcreasing, thresholdProblem,iteration=iteration+1)
+
+}
+
+private fun calculateIncreasing(increasing: Boolean?, distanceOneTwo: Long): Boolean? {
+    var newIcreasing = increasing
+    if (newIcreasing == null) {
+        newIcreasing = if (distanceOneTwo > 0) {
+            true
+        } else if (distanceOneTwo < 0) {
+            false
+        } else null
+    }
+    return newIcreasing
+}
 
 private fun isSafety(
     levelDiffs: Int,
