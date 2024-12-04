@@ -103,7 +103,7 @@ private fun part2(input: List<String>): Long {
     val searchWord = "XMAS"
     return chars.mapIndexed { rowIndex, row ->
         row.mapIndexed { columnIndex, char ->
-            if (char == 'A') {git commit --author="Posac" -m "Your commit message"
+            if (char == 'A') {
                 val oneDiag =
                     checkWord(chars, "MAS", listOf(rowIndex - 1 to columnIndex - 1), direction = (1 to 1)) + checkWord(
                         chars,
