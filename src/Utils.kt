@@ -36,6 +36,8 @@ data class Position(val row: Long, val column: Long) {
         south()
     )
 
+    fun transpose() = Position(row = column, column = row)
+
     fun move(direction: Direction, times: Long) = when (direction) {
         Direction.NORT -> north(times)
         Direction.EAST -> east(times)
