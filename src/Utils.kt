@@ -58,6 +58,13 @@ enum class Direction() {
         SOUTH -> NORT
         WEST -> EAST
     }
+
+    fun turnLeft() = when (this) {
+        NORT -> EAST
+        EAST -> SOUTH
+        SOUTH -> WEST
+        WEST -> NORT
+    }
 }
 
 
