@@ -1,3 +1,9 @@
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.io.File
+
 private const val DAY_NAME = "Day06"
 fun main() {
 //    checkPart1()
@@ -41,7 +47,11 @@ private fun checkPart1() {
 private fun checkPart2() {
     check(part2(readInputResources(DAY_NAME, "test_part_2_unit")).println("Part two test result") == 1L)
     check(part2(readInputResources(DAY_NAME, "test")).println("Part two test result") == 6L)
-    check(part2(readInputResources(DAY_NAME, "input")).println("Part two test result") < 1785L)
+    val part2 = part2(readInputResources(DAY_NAME, "input"))
+    check(part2.println("Part two test result") < 1785L)
+    check(part2.println("Part two test result") != 1784L)
+    check(part2.println("Part two test result") != 1606L)
+    check(part2.println("Part two test result") != 1663L)
 }
 
 private fun part2(input: List<String>): Long {
@@ -50,7 +60,14 @@ private fun part2(input: List<String>): Long {
     val startingPoint = triple.second
     var direction = triple.third
 
-    return checkNoRec(startingPoint,  game, direction)
+//    val newObs = checkNoRec(startingPoint, game, direction)
+//
+//    File("test_input_result").writeText(
+//        input.mapIndexed { row, s ->
+//            s.mapIndexed { col, c -> if (newObs.contains(Position(row, col))) 'O' else c }.joinToString("")
+//        }.joinToString("\n")
+//    )
+    return checkBrutForce(startingPoint, game, direction)
 
 }
 
@@ -63,9 +80,9 @@ data class Movement(
 data class PathItem(
     val currentPosition: Position,
     val direction: Direction,
-    val pathId:String,
+    val pathId: String,
     val newObsticle: Position? = null
-){
+) {
     fun turnLeft() = copy(direction = direction.turnLeft())
 
     fun moveForward() = copy(currentPosition = currentPosition.move(direction, 1))
@@ -73,34 +90,51 @@ data class PathItem(
     fun toMovement() = Movement(currentPosition, direction)
 }
 
-private fun checkNoRec(
-    currentPosition: Position,
+
+private fun checkBrutForce(
+    startingPosition: Position,
     game: Map<Position, Char>,
-    direction: Direction
+    startingDirection: Direction
 ): Long {
-    val positionsToCheck = mutableListOf(PathItem(currentPosition,  direction, "starting/") )
+    return runBlocking(Dispatchers.Default) {
+        async {
+            game.filter { it.value != '#' }.keys.count {
+                val newGame = game.toMutableMap()
+                newGame[it] = '#'
+                checkLoop(startingPosition, newGame, startingDirection)
+            }
+        }.await()
+    }.toLong()
+}
+
+private fun checkNoRec(
+    startingPosition: Position,
+    game: Map<Position, Char>,
+    startingDirection: Direction
+): Set<Position> {
+    val positionsToCheck = mutableListOf(PathItem(startingPosition, startingDirection, "starting/"))
     val paths = mutableMapOf<String, MutableSet<Movement>>()
-    val cache = mutableMapOf<Movement, Int>()
     val newObsticle = mutableSetOf<Position>()
     while (positionsToCheck.isNotEmpty()) {
         val pathItem = positionsToCheck.removeAt(0)
         val (currentPosition, direction, pathId) = pathItem
         val nextPosition = currentPosition.move(direction, 1)
 
-        when{
-            !game.containsKey(currentPosition) ->{}
-            paths.computeIfAbsent(pathItem.pathId){ mutableSetOf()}.contains(pathItem.toMovement()) -> {
-                if(pathItem.newObsticle!=null)
+        when {
+            !game.containsKey(nextPosition) -> {}
+            paths.computeIfAbsent(pathItem.pathId) { mutableSetOf() }.contains(pathItem.toMovement()) -> {
+                if (pathItem.newObsticle != null)
                     newObsticle.add(pathItem.newObsticle)
             }
+
             game[nextPosition] == '#' -> positionsToCheck.add(pathItem.turnLeft())
             pathItem.newObsticle == null -> {
                 positionsToCheck.add(pathItem.moveForward())
                 val newPathId = pathItem.pathId + "${nextPosition}"
                 positionsToCheck.add(pathItem.turnLeft().copy(newObsticle = nextPosition, pathId = newPathId))
                 paths[newPathId] = paths[pathId]!!.toMutableSet()
-
             }
+
             else -> positionsToCheck.add(pathItem.moveForward())
         }
         paths[pathId]!!.add(pathItem.toMovement())
@@ -108,37 +142,39 @@ private fun checkNoRec(
     }
 
 
-
-
-    return newObsticle.size.toLong()
+    return newObsticle.filter {
+        val newGame = game.toMutableMap()
+        newGame[it] = '#'
+        checkLoop(startingPosition, newGame, startingDirection)
+    }.toSet()
 
 
 }
 
-private fun finishGame(
+private fun checkLoop(
     currentPosition: Position,
-    visitedPositions: Set<Pair<Position, Direction>>,
     game: Map<Position, Char>,
     direction: Direction
-): Long {
+): Boolean {
     var direction1 = direction
     lateinit var nextPosition: Position
     var curr = currentPosition
-    val visitedPositions = visitedPositions.toMutableSet()
+    val visitedPositions = mutableSetOf<Pair<Position, Direction>>()
     while (game.containsKey(curr)) {
-        nextPosition = currentPosition.move(direction1, 1)
+        nextPosition = curr.move(direction1, 1)
         if (visitedPositions.contains(curr to direction1)) {
-            return 1
+            return true
         }
         if (game[nextPosition] == '#') {
             direction1 = direction1.turnLeft()
+            continue
         }
 
-        visitedPositions.add(currentPosition to direction1)
+        visitedPositions.add(curr to direction1)
         curr = curr.move(direction1, 1)
 
     }
-    return 0
+    return false
 }
 
 private fun parseGame(input: List<String>): Triple<Map<Position, Char>, Position, Direction> {
