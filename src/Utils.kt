@@ -129,10 +129,18 @@ data class State<T, S>(
     val itemsToProcess: MutableList<T>,
     val result: MutableList<S>
 ) {
+    fun addToProcessing(next: T) {
+        itemsToProcess.add(next)
+    }
+
+    fun acceptResult(current: S) {
+        result.add(current)
+    }
+
     constructor(startingItem: List<T>) : this(startingItem.toMutableList(), mutableListOf())
 }
 
-inline fun <T, S> processItems(state: State<T, S>, crossinline process: (T, State<T, S>) -> Long): List<S> {
+inline fun <T, S> processItems(state: State<T, S>, crossinline process: (T, State<T, S>) -> Unit): List<S> {
     while (state.itemsToProcess.isNotEmpty()) {
         val item = state.itemsToProcess.removeFirst()
         process(item, state)

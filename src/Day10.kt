@@ -13,10 +13,8 @@ fun main() {
 private fun part1(input: List<String>): Long {
     val (game, findBegginings) = parseGame(input)
 
-
-
     return findBegginings.entries.map {
-        countPaths(it.key, game)
+        countPaths(it.key, game).toSet()
     }.flatten().size.toLong()
 }
 
@@ -28,43 +26,39 @@ private fun parseGame(input: List<String>): Pair<Map<Position, Int?>, Map<Positi
 }
 
 
-fun countPaths(beggining: Position, game: Map<Position, Int?>): Set<Position> {
-    val toVisit = mutableListOf(beggining)
-    val visited = mutableSetOf<Position>()
-    val picks = mutableSetOf<Position>()
-
-    while (toVisit.isNotEmpty()) {
-        val current = toVisit.removeFirst().println("Current")
-        if (current in visited) continue
-        visited.add(current)
+fun countPaths(beggining: Position, game: Map<Position, Int?>): List<Position> {
+    val result = processItems(State(listOf(beggining))) { current, state ->
         val value = game[current]
-        if (value == null) continue
-        if (value == 9) {
-            "Found end".println("[$beggining] $current")
-            picks.add(current)
-            continue
+        when {
+            value == null -> {}
+            value == 9 -> {
+                "Found end".println("[$current.key] $current")
+                state.acceptResult(current)
+            }
+            else -> {
+                addToVisitNextStep(current, game, state, Direction.NORTH)
+                addToVisitNextStep(current, game, state, Direction.SOUTH)
+                addToVisitNextStep(current, game, state, Direction.WEST)
+                addToVisitNextStep(current, game, state, Direction.EAST)
+            }
         }
-
-        addToVisitNextStep(current, game, toVisit, Direction.NORTH)
-        addToVisitNextStep(current, game, toVisit, Direction.SOUTH)
-        addToVisitNextStep(current, game, toVisit, Direction.WEST)
-        addToVisitNextStep(current, game, toVisit, Direction.EAST)
-
     }
-    return picks
+
+
+    return result
 }
 
 private fun addToVisitNextStep(
     current: Position,
     game: Map<Position, Int?>,
-    toVisit: MutableList<Position>,
+    state: State<Position, Position>,
     direction: Direction
 ) {
     val next = current.move(direction)
     val nextValue = game[next].println("[$next] nextValue")
     val currentValue = game[current].println("[$next] CurrentValue")
     if (nextValue == null || currentValue == null) return
-    if (next in game && nextValue - currentValue == 1) toVisit.add(next)
+    if (next in game && nextValue - currentValue == 1) state.addToProcessing(next)
 }
 
 private fun checkPart1() {
@@ -82,31 +76,9 @@ private fun checkPart2() {
 
 private fun part2(input: List<String>): Long {
     val (game, findBegginings) = parseGame(input)
-
-
-
-    return findBegginings.entries.sumOf {
-        val toVisit = mutableListOf(it.key)
-        var count = 0
-
-        while (toVisit.isNotEmpty()) {
-            val current = toVisit.removeFirst().println("Current")
-            val value = game[current]
-            if (value == null) continue
-            if (value == 9) {
-                "Found end".println("[$it.key] $current")
-                count++
-                continue
-            }
-
-            addToVisitNextStep(current, game, toVisit, Direction.NORTH)
-            addToVisitNextStep(current, game, toVisit, Direction.SOUTH)
-            addToVisitNextStep(current, game, toVisit, Direction.WEST)
-            addToVisitNextStep(current, game, toVisit, Direction.EAST)
-
-        }
-        count
-    }.toLong()
+    return findBegginings.entries.map {
+        countPaths(it.key, game)
+    }.flatten().size.toLong()
 
 
 }
