@@ -1,8 +1,6 @@
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.io.File
 
 private const val DAY_NAME = "Day06"
 fun main() {
@@ -197,7 +195,7 @@ private fun parseGame(input: List<String>): Triple<Map<Position, Char>, Position
 
 
     var direction = when (game[startingPoint]) {
-        '^' -> Direction.NORT
+        '^' -> Direction.NORTH
         'v' -> Direction.SOUTH
         '<' -> Direction.WEST
         '>' -> Direction.EAST

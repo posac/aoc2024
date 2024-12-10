@@ -11,15 +11,13 @@ fun main() {
 
 
 private fun part1(input: List<String>): Long {
-    val game = input.mapIndexed { rowIdx, row ->
-        row.mapIndexed { columnIdx, column -> Position(rowIdx, columnIdx) to column }
-    }.flatten().toMap().println("Game")
+    val game = parsePositionGame(input) { it }
 
     return processFrequency(game)
 
 }
 
-private fun processFrequency(game: Map<Position, Char>, firstOnly: Boolean = true, addStations : Boolean = false): Long {
+private fun processFrequency(game: Map<Position, Char>, firstOnly: Boolean = true, addStations: Boolean = false): Long {
     val frequencyGroups = game.entries.groupBy { it.value }
 
     val antinodes = frequencyGroups.flatMap {
@@ -38,7 +36,7 @@ private fun processFrequency(game: Map<Position, Char>, firstOnly: Boolean = tru
             }
             antinodes
         }.filter { it in game.keys }
-    } + (if (addStations) game.keys.filter{game[it]!='.'} else emptyList())
+    } + (if (addStations) game.keys.filter { game[it] != '.' } else emptyList())
 
 
 
@@ -54,10 +52,10 @@ private fun calculateAntinodes(
 ): List<Position> {
     val result = mutableListOf<Position>()
     var currentPosition = position
-    while(currentPosition in game.keys) {
-        currentPosition = currentPosition.move(Direction.NORT, rowDiff).move(Direction.WEST, columnDiff)
+    while (currentPosition in game.keys) {
+        currentPosition = currentPosition.move(Direction.NORTH, rowDiff).move(Direction.WEST, columnDiff)
         result.add(currentPosition)
-        if(firstOnly) break
+        if (firstOnly) break
     }
 
     return result
@@ -73,10 +71,7 @@ private fun checkPart2() {
 }
 
 private fun part2(input: List<String>): Long {
-    val game = input.mapIndexed { rowIdx, row ->
-        row.mapIndexed { columnIdx, column -> Position(rowIdx, columnIdx) to column }
-    }.flatten().toMap().println("Game")
-
-    return processFrequency(game,firstOnly = false, addStations = true)
+    val game = parsePositionGame(input) { it }
+    return processFrequency(game, firstOnly = false, addStations = true)
 
 }

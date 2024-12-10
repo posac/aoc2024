@@ -25,7 +25,7 @@ data class Position(val row: Long, val column: Long) {
     constructor(row: Int, column: Int) : this(row.toLong(), column.toLong())
 
     fun south(times: Long = 1) = Direction.SOUTH to copy(row = row + times)
-    fun north(times: Long = 1) = Direction.NORT to copy(row = row - times)
+    fun north(times: Long = 1) = Direction.NORTH to copy(row = row - times)
     fun east(times: Long = 1) = Direction.EAST to copy(column = column + times)
     fun west(times: Long = 1) = Direction.WEST to copy(column = column - times)
 
@@ -38,8 +38,8 @@ data class Position(val row: Long, val column: Long) {
 
     fun transpose() = Position(row = column, column = row)
 
-    fun move(direction: Direction, times: Long=1) = when (direction) {
-        Direction.NORT -> north(times)
+    fun move(direction: Direction, times: Long = 1) = when (direction) {
+        Direction.NORTH -> north(times)
         Direction.EAST -> east(times)
         Direction.SOUTH -> south(times)
         Direction.WEST -> west(times)
@@ -47,23 +47,23 @@ data class Position(val row: Long, val column: Long) {
 }
 
 enum class Direction() {
-    NORT,
+    NORTH,
     EAST,
     SOUTH,
     WEST;
 
     fun oposit() = when (this) {
-        NORT -> SOUTH
+        NORTH -> SOUTH
         EAST -> WEST
-        SOUTH -> NORT
+        SOUTH -> NORTH
         WEST -> EAST
     }
 
     fun turnLeft() = when (this) {
-        NORT -> EAST
+        NORTH -> EAST
         EAST -> SOUTH
         SOUTH -> WEST
-        WEST -> NORT
+        WEST -> NORTH
     }
 }
 
@@ -115,4 +115,27 @@ fun List<String>.splitByEmptyLine(): List<List<String>> {
         }
         yield(batch)
     }.toList()
+}
+
+
+fun <T> parsePositionGame(input: List<String>, valueParser: (Char) -> T): Map<Position, T> {
+    return input.mapIndexed { rowIdx, row ->
+        row.mapIndexed { columnIdx, column -> Position(rowIdx, columnIdx) to valueParser(column) }
+    }.flatten().toMap().println("Game")
+}
+
+
+data class State<T, S>(
+    val itemsToProcess: MutableList<T>,
+    val result: MutableList<S>
+) {
+    constructor(startingItem: List<T>) : this(startingItem.toMutableList(), mutableListOf())
+}
+
+inline fun <T, S> processItems(state: State<T, S>, crossinline process: (T, State<T, S>) -> Long): List<S> {
+    while (state.itemsToProcess.isNotEmpty()) {
+        val item = state.itemsToProcess.removeFirst()
+        process(item, state)
+    }
+    return state.result
 }

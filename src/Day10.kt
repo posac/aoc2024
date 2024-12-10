@@ -21,10 +21,7 @@ private fun part1(input: List<String>): Long {
 }
 
 private fun parseGame(input: List<String>): Pair<Map<Position, Int?>, Map<Position, Int?>> {
-    val game = input.mapIndexed { rowIdx, row ->
-        row.mapIndexed { columnIdx, column -> Position(rowIdx, columnIdx) to column.digitToIntOrNull() }
-    }.flatten().toMap().println("Game")
-
+    val game = parsePositionGame(input) { it.digitToIntOrNull() }
     val findBegginings = game.filter { it.value == 0 }
     findBegginings.println("Starting Points")
     return Pair(game, findBegginings)
@@ -48,7 +45,7 @@ fun countPaths(beggining: Position, game: Map<Position, Int?>): Set<Position> {
             continue
         }
 
-        addToVisitNextStep(current, game, toVisit, Direction.NORT)
+        addToVisitNextStep(current, game, toVisit, Direction.NORTH)
         addToVisitNextStep(current, game, toVisit, Direction.SOUTH)
         addToVisitNextStep(current, game, toVisit, Direction.WEST)
         addToVisitNextStep(current, game, toVisit, Direction.EAST)
@@ -75,10 +72,12 @@ private fun checkPart1() {
 //    check(part1(readInputResources(DAY_NAME, "test_02")).println("Part one test result") == 4L)
 //    check(part1(readInputResources(DAY_NAME, "test_03")).println("Part one test result") == 2L)
     check(part1(readInputResources(DAY_NAME, "test")).println("Part one test result") == 36L)
+    check(part1(readInputResources(DAY_NAME, "input")).println("Part one test result") == 754L)
 }
 
 private fun checkPart2() {
     check(part2(readInputResources(DAY_NAME, "test")).println("Part two test result") == 81L)
+    check(part2(readInputResources(DAY_NAME, "input")).println("Part two test result") == 1609L)
 }
 
 private fun part2(input: List<String>): Long {
@@ -100,7 +99,7 @@ private fun part2(input: List<String>): Long {
                 continue
             }
 
-            addToVisitNextStep(current, game, toVisit, Direction.NORT)
+            addToVisitNextStep(current, game, toVisit, Direction.NORTH)
             addToVisitNextStep(current, game, toVisit, Direction.SOUTH)
             addToVisitNextStep(current, game, toVisit, Direction.WEST)
             addToVisitNextStep(current, game, toVisit, Direction.EAST)
@@ -108,8 +107,6 @@ private fun part2(input: List<String>): Long {
         }
         count
     }.toLong()
-
-
 
 
 }
