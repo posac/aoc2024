@@ -29,6 +29,11 @@ data class Position(val row: Long, val column: Long) {
     fun east(times: Long = 1) = Direction.EAST to copy(column = column + times)
     fun west(times: Long = 1) = Direction.WEST to copy(column = column - times)
 
+    fun northEast() = north().second.east().second
+    fun northWest() = north().second.west().second
+    fun southEast() = south().second.east().second
+    fun southWest() = south().second.west().second
+
     fun allAround() = mapOf(
         west(),
         east(),
@@ -44,13 +49,15 @@ data class Position(val row: Long, val column: Long) {
         Direction.SOUTH -> south(times)
         Direction.WEST -> west(times)
     }.second
+
+
 }
 
-enum class Direction() {
-    NORTH,
-    EAST,
-    SOUTH,
-    WEST;
+enum class Direction(val vertical: Boolean, val horizontal: Boolean) {
+    NORTH(vertical = true, horizontal = false),
+    EAST(vertical = false, horizontal = true),
+    SOUTH(vertical = true, horizontal = false),
+    WEST(vertical = false, horizontal = true);
 
     fun oposit() = when (this) {
         NORTH -> SOUTH
