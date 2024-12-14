@@ -50,7 +50,9 @@ data class Position(val row: Long, val column: Long) {
         Direction.WEST -> west(times)
     }.second
 
+    fun multiply(times: Long) = copy(row = row * times, column = column * times)
 
+    fun move(position: Position) = copy(row = row + position.row, column = column + position.column)
 }
 
 enum class Direction(val vertical: Boolean, val horizontal: Boolean) {
