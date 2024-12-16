@@ -1,4 +1,5 @@
 private const val DAY_NAME = "Day01"
+
 fun main() {
     checkPart1()
 //    checkPart2()
