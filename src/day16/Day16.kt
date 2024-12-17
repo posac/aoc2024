@@ -27,7 +27,7 @@ fun main() {
 
     val input = readInputResources(DAY_NAME, "input")
 //    part1(input).println("Part one result:")
-    part2(input).println("Part two result:")
+    part2(input).println("Part two esult:")
 }
 
 var idxSeq = 0
