@@ -5,17 +5,6 @@ import readInputResources
 
 private const val DAY_NAME = "Day01"
 
-data class Registers(var a: Int, val b: Int, val c: Int, val out: MutableList<Int> = mutableListOf())
-enum class Opcodes(val code: Int) {
-    ADV(0),
-    BXL(1),
-    BST(2),
-    JNZ(3),
-    BXC(4),
-    OUT(5),
-    BDV(6),
-    CDV(7),
-}
 
 
 fun main() {
@@ -29,20 +18,13 @@ fun main() {
 }
 
 
-private fun part1(input: List<String>): String {
-    val registers = Registers(
-        a=input[0].split(": ")[1].toInt(),
-        b=input[1].split(": ")[1].toInt(),
-        c=input[2].split(": ")[1].toInt(),
-    ).println("Registers")
+private fun part1(input: List<String>): Long {
 
-
-
-    return input.size.toLong().toString()
+    return input.size.toLong()
 }
 
 private fun checkPart1() {
-    check(part1(readInputResources(DAY_NAME, "test")).println("Part one test result") == "4,6,3,5,6,3,5,2,1,0")
+    check(part1(readInputResources(DAY_NAME, "test")).println("Part one test result") == 1L)
 }
 
 private fun checkPart2() {
