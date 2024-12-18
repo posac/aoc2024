@@ -2,7 +2,7 @@ import kotlin.math.min
 
 private const val DAY_NAME = "Day15"
 fun main() {
-//    checkPart1()
+    checkPart1()
     checkPart2()
 
 
