@@ -1,5 +1,13 @@
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import java.security.MessageDigest
+import java.util.concurrent.Future
 import kotlin.io.path.Path
 import kotlin.io.path.readLines
 
@@ -156,3 +164,23 @@ inline fun <T, S> processItems(state: State<T, S>, crossinline process: (T, Stat
     }
     return state.result
 }
+
+
+@OptIn(ExperimentalCoroutinesApi::class)
+inline fun <T, S> processItemsCoroutine(
+    state: State<T, S>,
+    parallel: Int,
+    crossinline process: (T, State<T, S>) -> Unit
+): List<S> =
+    runBlocking {
+        val jobs = mutableListOf<Deferred<Unit>>()
+        withContext(Dispatchers.IO.limitedParallelism(parallel)) {
+            while (state.itemsToProcess.isNotEmpty()) {
+                val item = state.itemsToProcess.removeFirst()
+                jobs.add(async {
+                    process(item, state)
+                })
+            }
+        }
+        state.result
+    }
