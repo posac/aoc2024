@@ -25,26 +25,17 @@ fun main() {
 
 private fun part1(input: List<String>): Long {
     return input.sumOf {
-
-        val numeric = movementsOnKeyboard(it, numbericKeyboad)
-        println("Numeric $it : $numeric")
-        val additionsl = 2
-        val score = mapOf(
-            'A' to evaluateDirections('A', additionsl),
-            '^' to evaluateDirections('^', additionsl),
-            '<' to evaluateDirections('<', additionsl),
-            '>' to evaluateDirections('>', additionsl),
-            'v' to evaluateDirections('v', additionsl),
-        )
-
-        val minimalScore = numeric.minOf {
-            it.sumOf { score[it]!!.length }
-
+        val numeric =  movementsOnKeyboard(it, numbericKeyboad)
+        val firstDirection = numeric.flatMap {  movementsOnKeyboard(it, directionKeyboard)}
+        val minimal = firstDirection.minOf { it.length }
+        val secondDirection = firstDirection.filter { it.length == minimal }.flatMap {
+            movementsOnKeyboard(it, directionKeyboard)
         }
+        val secondMinimal = secondDirection.minOf { it.length }
         val number = it.filter { it.isDigit() }.toInt()
         number.println("Number")
 
-        number * minimalScore.toLong()
+        number*secondMinimal.toLong()
 
     }
 
@@ -104,7 +95,7 @@ fun movementsOnKeyboard(code: String, keyboard: Map<Position, Char>): List<Strin
 
     paths.map {
         it.first().map { it.display() } + "A"
-    }.joinToString("").println("Code $code : ")
+    }.joinToString("")
 
 
     return run {
@@ -122,15 +113,25 @@ fun movementsOnKeyboard(code: String, keyboard: Map<Position, Char>): List<Strin
                 }.toMutableList()
             }
         }
-        allStrings.forEach {
-            it.println()
-        }
         allStrings
 
     }
 
 
 }
+
+data class CacheKeyMoves(
+    val game: Map<Position, Char>,
+    val columnCount: Long,
+    val rowCount: Long,
+    val columnDirection: Direction,
+    val rowDirection: Direction,
+    val currentPosition: Position,
+    val destination: Position,
+    val path: List<Direction> = mutableListOf()
+)
+
+val cache : MutableMap<CacheKeyMoves, Set<List<Direction>>>  = mutableMapOf()
 
 fun generateAllMoves(
     game: Map<Position, Char>,
@@ -142,52 +143,51 @@ fun generateAllMoves(
     destination: Position,
     path: List<Direction> = mutableListOf()
 ): Set<List<Direction>> {
-    if (game[currentPosition]!! == '_') {
-        return emptySet()
-    }
-    if (currentPosition == destination) {
-        return setOf(path)
-    }
-    val result = mutableSetOf<List<Direction>>()
-    if (rowCount != 0L)
-        result.addAll(
-            generateAllMoves(
-                game = game,
-                columnCount = columnCount,
-                rowCount = rowCount - 1,
-                columnDirection = columnDirection,
-                rowDirection = rowDirection,
-                currentPosition = currentPosition.move(rowDirection),
-                destination = destination,
-                path = path + rowDirection
-            )
-        )
+    return cache.getOrPut(CacheKeyMoves(game, columnCount, rowCount, columnDirection, rowDirection, currentPosition, destination, path)) {
+        when {
+            game[currentPosition]!! == '_' ->  emptySet()
 
-    if (columnCount != 0L)
-        result.addAll(
-            generateAllMoves(
-                game = game,
-                columnCount = columnCount - 1,
-                rowCount = rowCount,
-                columnDirection = columnDirection,
-                rowDirection = rowDirection,
-                currentPosition = currentPosition.move(columnDirection),
-                destination = destination,
-                path = path + columnDirection
-            )
-        )
+            currentPosition == destination -> setOf( path)
+            else ->  {
+                val result = mutableSetOf<List<Direction>>()
 
-    return result
+                if (rowCount != 0L)
+                    result.addAll(
+                        generateAllMoves(
+                            game = game,
+                            columnCount = columnCount,
+                            rowCount = rowCount - 1,
+                            columnDirection = columnDirection,
+                            rowDirection = rowDirection,
+                            currentPosition = currentPosition.move(rowDirection),
+                            destination = destination,
+                            path = path + rowDirection
+                        )
+                    )
+
+                if (columnCount != 0L)
+                    result.addAll(
+                        generateAllMoves(
+                            game = game,
+                            columnCount = columnCount - 1,
+                            rowCount = rowCount,
+                            columnDirection = columnDirection,
+                            rowDirection = rowDirection,
+                            currentPosition = currentPosition.move(columnDirection),
+                            destination = destination,
+                            path = path + columnDirection
+                        )
+                    )
+
+                result
+            }
+        }
+    }
+
 }
 
 
 private fun checkPart1() {
-    evaluateDirections('^', 1).println("^:")
-    evaluateDirections('<', 1).println("<:")
-    evaluateDirections('>', 1).println(">:")
-    evaluateDirections('v', 1).println("v:")
-    evaluateDirections('A', 1).println("A:")
-
 
     movementsOnKeyboard("029A", numbericKeyboad).let {
         it.forEach(::println)
