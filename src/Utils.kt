@@ -82,6 +82,13 @@ enum class Direction(val vertical: Boolean, val horizontal: Boolean) {
         SOUTH -> WEST
         WEST -> NORTH
     }
+
+    fun display() = when (this) {
+        NORTH -> "^"
+        EAST -> ">"
+        SOUTH -> "v"
+        WEST -> "<"
+    }
 }
 
 

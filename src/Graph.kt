@@ -1,7 +1,7 @@
 data class Graph<T>(
     val vertices: Set<T>,
     val edges: Map<T, Set<T>>,
-    val weights: Map<Pair<T, T>, Int>
+    val weights: Map<Pair<T, T>, Int>? = null
 )
 
 fun <T> dijkstra(graph: Graph<T>, start: T): Map<T, T?> {
@@ -19,7 +19,7 @@ fun <T> dijkstra(graph: Graph<T>, start: T): Map<T, T?> {
             .key
 
         graph.edges.getValue(v).minus(S).forEach { neighbor ->
-            val newPath = delta.getValue(v) + graph.weights.getValue(Pair(v, neighbor))
+            val newPath = delta.getValue(v) + (graph.weights?.getValue(Pair(v, neighbor))?:1 )
 
             if (newPath < delta.getValue(neighbor)) {
                 delta[neighbor] = newPath
