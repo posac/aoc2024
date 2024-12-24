@@ -98,6 +98,14 @@ fun <T> List<T>.combination(): List<Pair<T, T>> = dropLast(1).mapIndexed { index
     }
 }.flatten()
 
+fun <T> List<T>.combinationSequence() = sequence<Pair<T, T>> {
+    (0..<size-1).forEach {first->
+        (1..<size).forEach { second->
+            yield(this@combinationSequence[first] to this@combinationSequence[second])
+        }
+    }
+}
+
 fun <T> Map<Int, List<T>>.iterateOverCombination(): Sequence<List<T>> {
     val map = this
     return sequence {

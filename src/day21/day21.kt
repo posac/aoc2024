@@ -25,21 +25,58 @@ fun main() {
 
 private fun part1(input: List<String>): Long {
     return input.sumOf {
-        val numeric =  movementsOnKeyboard(it, numbericKeyboad)
-        val firstDirection = numeric.flatMap {  movementsOnKeyboard(it, directionKeyboard)}
-        val minimal = firstDirection.minOf { it.length }
-        val secondDirection = firstDirection.filter { it.length == minimal }.flatMap {
-            movementsOnKeyboard(it, directionKeyboard)
-        }
-        val secondMinimal = secondDirection.minOf { it.length }
+        val numeric = movementsOnKeyboard(it, numbericKeyboad)
+        val secondMinimal = robots(numeric, 4)
+
+//        val secondMinimal = robots.minOf { it.length }
         val number = it.filter { it.isDigit() }.toInt()
         number.println("Number")
 
-        number*secondMinimal.toLong()
+        number * secondMinimal.toLong()
 
     }
 
 
+}
+
+
+private fun robots(numeric: List<String>, robotsCount: Int): Int {
+
+
+    val score = numeric.minOf {
+        println("solution: $it")
+        it.split("A").sumOf {
+            if (it == "")
+                0
+            else {
+                println("Split: $it")
+                movementsOnKeyboard(it + "A", directionKeyboard).minOf {
+                    if (it == "")
+                        0
+                    else
+                        it.split("A")
+                            .sumOf {
+                                movementsOnKeyboard(it + "A", directionKeyboard)
+                                    .minOf { it.length }
+                            }
+                }
+            }
+        }
+    }
+//    var robots = listOf( numeric.first())
+//    robots.println("Initial:")
+//    repeat(2) {
+//        robots = robots.flatMap { movementsOnKeyboard(it, directionKeyboard) }
+//        robots.take(5).println("Iteration:")
+//
+//
+//
+//    }
+
+//        .map { it.map { score[it]!! }.joinToString("") }
+//
+//    val robots = numeric.map { it.map { score[it] }.joinToString("") }
+    return score
 }
 
 val directionKeyboard = parsePositionGame(
@@ -131,7 +168,7 @@ data class CacheKeyMoves(
     val path: List<Direction> = mutableListOf()
 )
 
-val cache : MutableMap<CacheKeyMoves, Set<List<Direction>>>  = mutableMapOf()
+val cache: MutableMap<CacheKeyMoves, Set<List<Direction>>> = mutableMapOf()
 
 fun generateAllMoves(
     game: Map<Position, Char>,
@@ -143,12 +180,23 @@ fun generateAllMoves(
     destination: Position,
     path: List<Direction> = mutableListOf()
 ): Set<List<Direction>> {
-    return cache.getOrPut(CacheKeyMoves(game, columnCount, rowCount, columnDirection, rowDirection, currentPosition, destination, path)) {
+    return cache.getOrPut(
+        CacheKeyMoves(
+            game,
+            columnCount,
+            rowCount,
+            columnDirection,
+            rowDirection,
+            currentPosition,
+            destination,
+            path
+        )
+    ) {
         when {
-            game[currentPosition]!! == '_' ->  emptySet()
+            game[currentPosition]!! == '_' -> emptySet()
 
-            currentPosition == destination -> setOf( path)
-            else ->  {
+            currentPosition == destination -> setOf(path)
+            else -> {
                 val result = mutableSetOf<List<Direction>>()
 
                 if (rowCount != 0L)
@@ -204,7 +252,12 @@ private fun checkPart1() {
         check(!it.contains("<<^^^A"))
     }
     check(part1(readInputResources(DAY_NAME, "test")).println("Part one test result") == 126384L)
-
+// 1409445
+// 126384
+// 454024
+// 307397
+// 579506
+// 7324992
 }
 
 private fun checkPart2() {
@@ -215,24 +268,21 @@ private fun part2(input: List<String>): Long {
     return 0L
 }
 
-val directionCaches = mutableMapOf<Pair<Char, Int>, String>()
-fun evaluateDirections(direction: Char, time: Int): String {
+val directionCaches = mutableMapOf<Pair<String, Int>, Pair<String, List<String>>>()
+fun evaluateDirections(direction: String, time: Int): Pair<String, List<String>> {
     return directionCaches.getOrPut(direction to time) {
-        val posibilities = when (direction) {
-            '^' -> movementsOnKeyboard("^A", directionKeyboard)
-            'v' -> movementsOnKeyboard("vA", directionKeyboard)
-            '>' -> movementsOnKeyboard(">A", directionKeyboard)
-            '<' -> movementsOnKeyboard("<A", directionKeyboard)
-            'A' -> movementsOnKeyboard("A", directionKeyboard)
-            else -> throw IllegalArgumentException("Invalid direction $direction")
-        }
+        when (time) {
+            1 -> {
+                val items = movementsOnKeyboard(direction, directionKeyboard)
+                items.minBy { it.length } to items
+            }
 
-        if (time == 1)
-            posibilities.minBy { it.length }.println("[$time]Min for direction $direction")
-        else
-            posibilities.map { it.map { evaluateDirections(it, time - 1) }.joinToString("") }
-                .minBy { it.length }
-                .println("[$time]Min for direction $direction")
+            else -> {
+                val prevItems = evaluateDirections(direction, time - 1)
+                val items = prevItems.second.flatMap { movementsOnKeyboard(it, directionKeyboard) }
+                items.minBy { it.length }!! to items
+            }
+        }
     }
 
 
@@ -245,5 +295,23 @@ fun evaluateDirections(direction: Char, time: Int): String {
 
 
 //029A:
-//<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
-//  v <<   A >>
+
+//    v<A<A>^>A<Av>A^A
+//R1: <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
+//R2:   v <<   A >>  ^ A   <   A > A  v  A   <  ^ AA > A   < v  AAA >  ^ A
+//N :          <       A       ^   A     >        ^^   A        vvv      A
+//N:                   0           2                   9                 A
+
+
+/*
+
+
+v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>Av<A<A>^>AAA<Av>A^A
+  v <<   A >  ^  > A<A>A<AAv>A^Av<AAA^>A
+         <         A^A^^>AvvvA
+
+Initial: [<A^A^^>AvvvA]
+Iteration: [v<<A>^>A<A>A<AAv>A^Av<AAA^>A, v<<A>^>A<A>A<AAv>A^Av<AAA>^A, v<<A>^>A<A>A<AAv>A^A<vAAA^>A, v<<A>^>A<A>A<AAv>A^A<vAAA>^A, v<<A>^>A<A>A<AA>vA^Av<AAA^>A]
+Iteration: [v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>Av<A<A>^>AAA<Av>A^A, v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>Av<A<A>^>AAA<A>vA^A, v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>Av<A<A>>^AAA<Av>A^A, v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>Av<A<A>>^AAA<A>vA^A, v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>A<vA<A>^>AAA<Av>A^A]
+
+ */
