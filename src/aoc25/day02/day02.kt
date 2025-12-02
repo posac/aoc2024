@@ -10,7 +10,7 @@ data class Ranges(val first: Long, val last: Long)
 
 fun main() {
     checkPart1()
-//    checkPart2()
+    checkPart2()
 
 
     val input = readInputResources(DAY_NAME, "input")
@@ -61,9 +61,51 @@ private fun checkPart1() {
 }
 
 private fun checkPart2() {
-    check(part2(readInputResources(DAY_NAME, "test")).println("Part two test result") == 281L)
+    check(part2(readInputResources(DAY_NAME, "test")).println("Part two test result") == 4174379265L)
 }
 
-private fun part2(input: List<String>): Long = input.size.toLong()
+private fun part2(input: List<String>): Long {
+    val game = input.flatMap { it.split(",") }.filter { it.isNotBlank() }
+        .map { val range = it.split("-").map { it.toLong() }; Ranges(range[0], range[1]) }
+    game.forEach { println(it) }
+
+    return game.flatMap {
+        lookForInvalidPart2(it).println("Result for $it is : ")
+
+    }.sum()
+
+}
+
+private fun lookForInvalidPart2(ranges: Ranges): List<Long> {
+    val sizeOfStart = ranges.first.toString().length
+    val sizeOfEnd = ranges.last.toString().length
+    return when {
+        (sizeOfStart == sizeOfEnd) -> {
+            val sameDigits = sizeOfStart/2
+            IntRange(1,sameDigits)
+                .filter { sizeOfStart % it == 0 }
+                .flatMap { blockSize ->
+                    val repeats = sizeOfStart/blockSize
+                    val start = ranges.first.toString().substring(startIndex = 0, endIndex = blockSize).toLong()
+                    val end = ranges.last.toString().substring(startIndex = 0, endIndex = blockSize).toLong()
+                    LongRange(start,end )
+                        .map { blockNumber ->
+                            buildString {
+                                repeat(repeats) {
+                                    append(blockNumber)
+                                }
+                            }.toLong()
+                        }
+                        .filter { it <= ranges.last && it >= ranges.first}
+
+            }.distinct()
+        }
+
+        else -> {
+            val split = 10.0.pow((sizeOfStart + sizeOfEnd) / 2).toLong().coerceAtLeast(ranges.first + 1)
+            lookForInvalidPart2(Ranges(ranges.first, split - 1)) + lookForInvalidPart2(Ranges(split, ranges.last))
+        }
+    }
+}
 
 
