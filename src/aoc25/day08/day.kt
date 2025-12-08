@@ -10,7 +10,7 @@ private const val DAY_NAME = "2025/Day08"
 
 fun main() {
     checkPart1()
-//    checkPart2()
+    checkPart2()
 
 
     val input = readInputResources(DAY_NAME, "input")
@@ -77,9 +77,34 @@ private fun checkPart1() {
 }
 
 private fun checkPart2() {
-    check(part2(readInputResources(DAY_NAME, "test")).println("Part two test result") == 281L)
+    check(part2(readInputResources(DAY_NAME, "test")).println("Part two test result") == 25272L)
 }
 
-private fun part2(input: List<String>): Long = input.size.toLong()
+private fun part2(input: List<String>): Long {
+    val coordinates =
+        input.map { it.split(",").map { it.toInt() } }.map { Coordinates(x = it[0], y = it[1], z = it[2]) }
+
+    var workingCoordinates = coordinates.toMutableList().combination().sortedBy { it.first.distanceTo(it.second) }
+    var index =0
+    while(coordinates.map { it.coordinationGroup }.distinct().size !=1){
+
+        val pairToProcess = workingCoordinates[index++]
+        pairToProcess.println("Pair to process:")
+        println("distance : ${pairToProcess.first.distanceTo(pairToProcess.second)}")
+
+        val group = pairToProcess.first.coordinationGroup
+
+
+        group.add(pairToProcess.second.coordinationGroup)
+        group.coordinates.size.println("Merged group size:")
+
+        coordinates.map { it.coordinationGroup }.distinct().sortedByDescending { it.coordinates.size }
+            .println("Groups:")
+
+    }
+    val lastConnection = workingCoordinates[index-1].println("Last connection:")
+
+    return lastConnection.first.x.toLong() * lastConnection.second.x.toLong()
+}
 
 
