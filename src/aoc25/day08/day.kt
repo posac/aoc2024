@@ -14,14 +14,14 @@ fun main() {
 
 
     val input = readInputResources(DAY_NAME, "input")
-    part1(input).println("Part one result:")
+    part1(input, 1000).println("Part one result:")
     part2(input).println("Part two result:")
 }
 
 data class Coordinates(val x: Int, val y: Int, val z: Int) {
     var coordinationGroup: CoordinationGroup = CoordinationGroup(mutableListOf(this))
     fun distanceTo(other: Coordinates) =
-        sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y) + (z - other.z) * (z - other.z) * 1.0)
+        sqrt(Math.pow((x - other.x)*1.0, 2.0) + Math.pow((y - other.y)*1.0, 2.0)  + Math.pow((z - other.z)*1.0, 2.0))
 }
 
 data class CoordinationGroup(val coordinates: MutableList<Coordinates>) {
@@ -34,6 +34,7 @@ data class CoordinationGroup(val coordinates: MutableList<Coordinates>) {
 
     fun add(coordinateGroup: CoordinationGroup) {
         coordinateGroup.coordinates.forEach { coordinate ->
+            if (coordinates.contains(coordinate)) return
             coordinates.add(coordinate)
             coordinate.coordinationGroup = this
         }
@@ -42,46 +43,29 @@ data class CoordinationGroup(val coordinates: MutableList<Coordinates>) {
 
 }
 
-private fun part1(input: List<String>): Long {
+private fun part1(input: List<String>, iterations : Int = 10): Long {
     val coordinates =
         input.map { it.split(",").map { it.toInt() } }.map { Coordinates(x = it[0], y = it[1], z = it[2]) }
-    val iterations = 10
 
-    var workingCoordinates = coordinates.toMutableList().combination()
+    var workingCoordinates = coordinates.toMutableList().combination().sortedBy { it.first.distanceTo(it.second) }
 
-    val processed = mutableListOf<Coordinates>()
-    repeat(iterations) {
-        it.println("Iteration:")
-        val pairToProcess = workingCoordinates.minBy {
-            val result = when {
-                it.first.coordinationGroup != it.second.coordinationGroup -> it.first.distanceTo(it.second)
-                    .toInt()
-
-                else -> Int.MAX_VALUE
-            }
-            result
-        }.also {
-            processed.add(it.first)
-            processed.add(it.second)
-        }
+    workingCoordinates.take(iterations).forEach {
+        pairToProcess ->
         pairToProcess.println("Pair to process:")
+        println("distance : ${pairToProcess.first.distanceTo(pairToProcess.second)}")
 
         val group = pairToProcess.first.coordinationGroup
+
 
         group.add(pairToProcess.second.coordinationGroup)
         group.coordinates.size.println("Merged group size:")
 
         coordinates.map { it.coordinationGroup }.distinct().sortedByDescending { it.coordinates.size }
             .println("Groups:")
-    }
-    val groups = coordinates.map { it.coordinationGroup }.distinct()
-    processed.sortedBy{ it.x }.forEach {
-        it.println("Processed:")
+
     }
 
-    coordinates.forEach { cord ->
-        println("coordinate $cord was processed in ${processed.count { it == cord }} ")
-    }
+    val groups = coordinates.map { it.coordinationGroup }.distinct()
     return groups.map { it.coordinates.size.toLong() }.sortedDescending().take(3).println("Top 3:")
         .reduce { acc, l -> acc * l }
 }
@@ -89,6 +73,7 @@ private fun part1(input: List<String>): Long {
 
 private fun checkPart1() {
     check(part1(readInputResources(DAY_NAME, "test")).println("Part one test result") == 40L)
+    check(part1(readInputResources(DAY_NAME, "input"), 1000).println("Part one test result") > 32240L)
 }
 
 private fun checkPart2() {
